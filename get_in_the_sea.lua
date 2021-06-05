@@ -63,6 +63,9 @@ function init()
     end
   }
   
+  params:add{type = "number", id = "max_drift", name = "max phrase drift", min = 1, max = 10, default = 3}
+  params:add{type = "number", id = "repeat_probability", name = "repeat probability", min = 0, max = 10, default = 5}
+  
   -- add seafarers and their params
   table.insert(seafarers, Seafarer:new(1))
   table.insert(seafarers, Seafarer:new(2))
@@ -74,7 +77,7 @@ function init()
   screen.aa(0)
 
   draw_metro.event = update
-  draw_metro:start(1/60)
+  draw_metro:start(1/10)
 end
 
 function mxSamplesInit()
@@ -123,27 +126,36 @@ function redraw()
   
   screen.font_size(10)
   local all_end = true
+  local any_playing = false
+  local min_phrase = 999
   for s = 1, #seafarers do
     
     -- check if all players have reached the end (probably shouldn't be here)
     if seafarers[s].phrase ~= #phrases then
       all_end = false
     end
+    -- check if all players are playing
+    if seafarers[s].playing then
+      any_playing = true
+    end
+    -- get the lowest phrase to stop seafarers racing ahead
+    if seafarers[s].phrase < min_phrase then
+      min_phrase = seafarers[s].phrase
+    end
 
     screen.move((s-1) * 30, 40)
     screen.text(string.format("%02d", seafarers[s].phrase))
   end
   
-  -- if all players have reached the end, let them all know they can stop
-  if all_end then
-    for s = 1, #seafarers do
-      seafarers[s].all_at_end = true
-    end
+  -- let all seafarers know what the others are up to
+  for s = 1, #seafarers do
+    seafarers[s].all_at_end = all_end
+    seafarers[s].max_phrase = min_phrase + params:get("max_drift")
   end
-  
+
   screen.font_size(8)
   screen.move(0, 60)
-  if seafarers[1].playing then
+  if any_playing then
     screen.text("Stop   Reset")
   else
     screen.text("Start  Reset")

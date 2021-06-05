@@ -1,4 +1,4 @@
--- spirals
+-- get in the sea!
 -- @tomw
 --
 -- E1 start/stop

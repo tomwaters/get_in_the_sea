@@ -201,7 +201,7 @@ function Seafarer:step()
         
         local rnd = math.random(10)
         local prob = params:get("repeat_probability")
-       //print(self.id.." r "..rnd.." p "..prob.." ph "..self.phrase.." mx "..self.max_phrase)
+       --print(self.id.." r "..rnd.." p "..prob.." ph "..self.phrase.." mx "..self.max_phrase)
         if rnd > prob and self.phrase < self.max_phrase then
           self.phrase = self.phrase + 1
           if self.phrase > #phrases then

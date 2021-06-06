@@ -72,9 +72,14 @@ function init()
   table.insert(seafarers, Seafarer:new(3))
   table.insert(seafarers, Seafarer:new(4))
   
+  table.insert(seafarers, Seafarer:new(5))
+  table.insert(seafarers, Seafarer:new(6))
+  table.insert(seafarers, Seafarer:new(7))
+  table.insert(seafarers, Seafarer:new(8))
+  
   params:default()
 
-  screen.aa(0)
+  screen.aa(1)
 
   draw_metro.event = update
   draw_metro:start(1/10)
@@ -117,7 +122,7 @@ end
 
 function redraw()
   screen.clear()
-  screen.font_face(24)
+  screen.font_face(12)
   screen.font_size(12)
   screen.level(15)
   
@@ -128,8 +133,9 @@ function redraw()
   local all_end = true
   local any_playing = false
   local min_phrase = 999
+  local x = 0
+  local y = 24
   for s = 1, #seafarers do
-    
     -- check if all players have reached the end (probably shouldn't be here)
     if seafarers[s].phrase ~= #phrases then
       all_end = false
@@ -143,8 +149,14 @@ function redraw()
       min_phrase = seafarers[s].phrase
     end
 
-    screen.move((s-1) * 30, 40)
+    screen.move(x, y)
     screen.text(string.format("%02d", seafarers[s].phrase))
+    
+    x = x + 30
+    if s == 4 then
+      y = 44
+      x = 0
+    end
   end
   
   -- let all seafarers know what the others are up to
@@ -165,10 +177,4 @@ function redraw()
 end
 
 function cleanup()
-end
-
-function demo()
-  for s = 1, #seafarers do
-      seafarers[s].playing = not seafarers[s].playing
-  end
 end

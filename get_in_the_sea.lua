@@ -10,6 +10,7 @@ local Seafarer = include("lib/seafarer")
 
 audio_engines = {"PolyPerc"}
 mxsamples_instruments = {}
+m = midi.connect()
 
 local draw_metro = metro.init()
 
@@ -100,6 +101,18 @@ function libInstalled(file)
   return false
 end
 
+m.event = function(data)
+  local d = midi.to_msg(data)
+  if d.type == "start" or d.type == "stop" or d.type == "continue" then
+    for s = 1, #seafarers do
+      if d.type == "start" then
+        seafarers[s]:reset()
+      end
+      
+      seafarers[s].playing = d.type == "start" or d.type == "continue"
+    end
+  end
+end
 
 function enc(n, d)
 end

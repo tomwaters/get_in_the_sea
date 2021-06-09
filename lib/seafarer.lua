@@ -170,72 +170,81 @@ end
 
 function Seafarer:step()
   clock.sync(1)
-  while true do
-    if self.playing then
-      self:all_notes_off()
-      
-      -- get current step in the phrase
-      local this_step = phrases[self.phrase][self.phrase_note]
-
-      -- play the note
-      local velocity = 100
-      local note_num = string.sub(this_step, 1, 2)
-      
-      if note_num ~= "!!" then
-        local freq = MusicUtil.note_num_to_freq(note_num)
+  local waitCount = 0
   
-        if self.output == 1 or self.output == 3 then
-          -- Mx.Samples
-          if audio_engines[params:get("audio_engine")] == "MxSamples" then
-            skeys:on({name=self.mx_instrument, midi=note_num, velocity=velocity})
-            table.insert(self.active_notes, note_num)
-          else
-            engine.hz(freq)
-          end
-        elseif self.output == 4 then
-          crow.output[1].volts = (note_num-60)/12
-          crow.output[2].execute()
-        elseif self.output == 5 then
-          crow.ii.jf.play_note((note_num-60)/12,5)
-        end
+  while true do
+  
+    if self.playing then
+      if waitCount == 0 then
+        self:all_notes_off()
+
+        -- get current step in the phrase
+        local this_step = phrases[self.phrase][self.phrase_note]
     
-        -- MIDI out
-        if (self.output == 2 or self.output == 3) then
-          self.midi_out_device:note_on(note_num, velocity, self:get_param("midi_out_channel"))
-          table.insert(self.active_notes, note_num)
-        end        
-      end
-      
-      
-      -- move through the phrase
-      self.phrase_note = self.phrase_note + 1
-      if self.phrase_note > #phrases[self.phrase] then
-        self.phrase_note = 1
+        -- play the note
+        local velocity = 100
+        local note_num = string.sub(this_step, 1, 2)
         
-        local rnd = math.random(10)
-        local prob = params:get("repeat_probability")
-        --print(self.id.." r "..rnd.." p "..prob.." ph "..self.phrase.." mx "..self.max_phrase)
-        if rnd > prob and self.phrase < self.max_phrase then
-          self.phrase = self.phrase + 1
-          if self.phrase > #phrases then
-            self.phrase = #phrases
-            
-            -- if all players are at the end we can stop
-            if self.all_at_end then
-              self.playing = false
-              self:all_notes_off()
+        if note_num ~= "!!" then
+          local freq = MusicUtil.note_num_to_freq(note_num)
+    
+          if self.output == 1 or self.output == 3 then
+            -- Mx.Samples
+            if audio_engines[params:get("audio_engine")] == "MxSamples" then
+              skeys:on({name=self.mx_instrument, midi=note_num, velocity=velocity})
+              table.insert(self.active_notes, note_num)
+            else
+              engine.hz(freq)
             end
-            
+          elseif self.output == 4 then
+            crow.output[1].volts = (note_num-60)/12
+            crow.output[2].execute()
+          elseif self.output == 5 then
+            crow.ii.jf.play_note((note_num-60)/12,5)
+          end
+      
+          -- MIDI out
+          if (self.output == 2 or self.output == 3) then
+            self.midi_out_device:note_on(note_num, velocity, self:get_param("midi_out_channel"))
+            table.insert(self.active_notes, note_num)
+          end        
+        end
+        
+        
+        -- move through the phrase
+        self.phrase_note = self.phrase_note + 1
+        if self.phrase_note > #phrases[self.phrase] then
+          self.phrase_note = 1
+          
+          local rnd = math.random(10)
+          local prob = params:get("repeat_probability")
+          if rnd > prob and self.phrase < self.max_phrase then
+            self.phrase = self.phrase + 1
+            if self.phrase > #phrases then
+              self.phrase = #phrases
+              
+              -- if all players are at the end we can stop
+              if self.all_at_end then
+                self.playing = false
+                self:all_notes_off()
+              end
+              
+            end
           end
         end
+        
+        -- wait for the note end
+        local note_len = string.sub(this_step, 4, -1)
+        
+        waitCount = (note_len / 0.25) - 1
+
+      else
+        waitCount = waitCount - 1
       end
-      
-      -- wait for the note end
-      local note_len = string.sub(this_step, 4, -1)
-      clock.sync(note_len)
-    else
-      clock.sync(1)
     end
+    
+    clock.sync(0.25)
+    
   end
 
 end

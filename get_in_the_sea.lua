@@ -109,6 +109,8 @@ m.event = function(data)
     for s = 1, #seafarers do
       if d.type == "start" then
         seafarers[s]:reset()
+      elseif d.type == "stop" then
+        seafarers[s]:all_notes_off()
       end
       
       seafarers[s].playing = d.type == "start" or d.type == "continue"
@@ -124,6 +126,7 @@ function key(n, z)
     for s = 1, #seafarers do
       if n == 2 then
         seafarers[s].playing = not seafarers[s].playing
+        seafarers[s]:all_notes_off()
       elseif n == 3 then
         seafarers[s]:reset()
       end
@@ -132,24 +135,9 @@ function key(n, z)
 end
 
 function update()
-  redraw()
-end
-
-function redraw()
-  screen.clear()
-  screen.font_face(12)
-  screen.font_size(12)
-  screen.level(15)
-  
-  screen.move(0, 10)
-  screen.text("Get in the sea!")
-  
-  screen.font_size(10)
   local all_end = true
   local any_playing = false
   local min_phrase = 999
-  local x = 0
-  local y = 24
   for s = 1, #seafarers do
     -- check if all players have reached the end (probably shouldn't be here)
     if seafarers[s].phrase ~= #phrases then
@@ -163,7 +151,31 @@ function redraw()
     if seafarers[s].phrase < min_phrase then
       min_phrase = seafarers[s].phrase
     end
+  end
+  
+  -- let all seafarers know what the others are up to
+  for s = 1, #seafarers do
+    seafarers[s].all_at_end = all_end
+    seafarers[s].max_phrase = min_phrase + params:get("max_drift")
+  end
+  
+  redraw()
+end
 
+function redraw()
+  screen.clear()
+  screen.font_face(12)
+  screen.font_size(12)
+  screen.level(15)
+  
+  screen.move(0, 10)
+  screen.text("Get in the sea!")
+  
+  screen.font_size(10)
+
+  local x = 0
+  local y = 24
+  for s = 1, #seafarers do
     screen.move(x, y)
     screen.text(string.format("%02d", seafarers[s].phrase))
     
@@ -172,12 +184,6 @@ function redraw()
       y = 44
       x = 0
     end
-  end
-  
-  -- let all seafarers know what the others are up to
-  for s = 1, #seafarers do
-    seafarers[s].all_at_end = all_end
-    seafarers[s].max_phrase = min_phrase + params:get("max_drift")
   end
 
   screen.font_size(8)
@@ -192,4 +198,7 @@ function redraw()
 end
 
 function cleanup()
+  for s = 1, #seafarers do
+    seafarers[s]:reset()
+  end
 end

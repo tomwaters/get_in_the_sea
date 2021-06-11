@@ -153,6 +153,7 @@ end
 function Seafarer:reset()
   self.phrase = 1
   self.phrase_note = 1
+  self:all_notes_off()
 end
 
 function Seafarer:all_notes_off()
